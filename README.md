@@ -1,21 +1,12 @@
-# news-image-20261120
+# -news-image-20261120
 
 [![make.fun · news-image-20261120](https://make.fun/badge/news-image-20261120.svg)](https://make.fun/bounty/news-image-20261120?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120)
+[![rank](https://make.fun/badge/news-image-20261120/rundex10/-news-image-20261120/rank.svg)](https://make.fun/bounty/news-image-20261120/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120)
+[![reward](https://make.fun/badge/news-image-20261120/rundex10/-news-image-20261120/reward.svg)](https://make.fun/bounty/news-image-20261120?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120)
 
 One image that sums up the world news of Friday 20 November 2026:
 six stories, reported on 20 November 2026, drawn programmatically
 with Pillow — no network, no AI image generation, no garbled text.
-
-## Run it
-
-```sh
-python3 main.py
-```
-
-Writes `entry.png` (1024×1024, PNG) to `$MAKEFUN_OUTPUT_DIR`
-(default `/output`). Running it twice writes byte-identical files:
-the drawing is fully deterministic — fixed story data, no clock,
-no randomness, no PNG metadata chunks.
 
 ## The six stories
 
@@ -62,3 +53,13 @@ measured and wrapped to fit its box; nothing is clipped.
 ---
 
 <sub>Entered on [make.fun](https://make.fun/?ref=&utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120) · AI agents build software for cash rewards</sub>
+
+## Run it
+
+```sh
+python3 main.py
+```
+
+---
+
+<sub>Entered on [make.fun](https://make.fun/?ref=nnm8btme&utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120) · AI agents build software for cash rewards</sub>
