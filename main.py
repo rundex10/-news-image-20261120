@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sum up 20 November 2026 world news in one image.
 
-Draws a 1024x1024 editorial infographic with the Python standard
+Draws a 1024x1024 newspaper front page with the Python standard
 library only: no Pillow, no system fonts, no network, no randomness,
 no clock, no timestamps in the PNG. Running it twice writes
 byte-identical files.
@@ -18,18 +18,14 @@ integer factors.
     python3 main.py            # writes /output/entry.png, or
     MAKEFUN_OUTPUT_DIR=out python3 main.py
 
-Six stories, all happened or first reported on Friday 20 November 2026
-(in some time zone), verified against Reuters / WSJ / Morningstar /
-India Meteorological Department reporting on 20 November 2026:
-  1. Asian markets plunge (Friday 20 Nov, Nikkei -4.8%)
-  2. Anthropic Nasdaq debut, closed +17% (reported 20 Nov)
-  3. Houthi missile damages Riyadh PIF Tower (reported 20 Nov)
-  4. Russian strikes damage Kyiv embassies, 1 killed (Thu 19 Nov,
-     reported 20 Nov; EU summon announced)
-  5. COP31 final day, draft drops fossil fuels (Fri 20 Nov)
-  6. Cyclone Akvan landfall, India east coast (Fri 20 Nov morning)
-The UK drone pledge was checked and left out: it was announced
-in Berlin on 19 November, not 20 November.
+Thirty stories, all happened or first reported on Friday 20 November
+2026 (in some time zone): 3 leads with illustration panels, 9 grid
+cards, and 18 more in the index, with a region strip, a figures row,
+a world map with numbered pins, and a footer naming what was left
+out as other days' news.
+Checked and left out: the UK's 1,000-drone pledge for Ukraine, the
+ICJ Myanmar ruling, the Shenzhen Trump-Xi-Putin summit and the Pete
+Rose pardon were all announced on 19 November, not 20 November.
 """
 
 import math
@@ -359,43 +355,205 @@ def wrap(text, scale, max_w):
 
 
 # (kicker, headline, body, accent, icon)
-STORIES = [
+LEADS = [
     (
         "ASIA  •  MARKETS",
-        "Asia markets plunge on AI fears",
+        "Markets plunge on AI fears",
         "Nikkei -4.8%, Kospi -5%, Taiex -6.4% as AI fears rattled investors.",
         RED, "chart_down",
     ),
     (
-        "UNITED STATES  •  TECH",
+        "AMERICAS  •  TECH",
         "Anthropic debuts in record IPO",
-        "Opened at $111.50, above the $83 price, and closed up 17% at $97.17.",
+        "Opened at $111.50, above the $83 price, closed up 17% at $97.17.",
         GREEN, "chart_up",
     ),
     (
-        "MIDDLE EAST  •  SAUDI ARABIA",
-        "Missile hits Riyadh's top tower",
-        "A Houthi missile hit the 80-storey PIF Tower, blowing out windows. No injuries.",
+        "MIDDLE EAST  •  WAR",
+        "Missile hits Riyadh tower",
+        "A Houthi missile hit the 80-storey PIF Tower. No injuries.",
         ORANGE, "tower",
     ),
+]
+
+# Grid bodies are shortened to fit two lines at scale 2.
+GRID = [
     (
-        "EUROPE  •  UKRAINE",
+        "EUROPE  •  WAR",
         "Strikes damage Kyiv embassies",
-        "Russian strikes hit the Austrian and Dutch embassies in Kyiv, killing one person.",
+        "One killed; EU to summon envoy.",
         PURPLE, "city",
     ),
     (
-        "CLIMATE  •  COP31, ANTALYA",
+        "GLOBAL  •  CLIMATE",
         "COP31 draft drops fossil fuels",
-        "Final-day draft had no mention of coal, oil or gas. Africa seeks $120bn a year.",
+        "Africa seeks $120bn a year.",
         TEAL, "globe",
     ),
     (
         "ASIA  •  WEATHER",
         "Cyclone Akvan hits India's coast",
-        "Akvan crossed the Odisha-Andhra Pradesh coast on Friday, winds 70-80 km/h.",
+        "Winds 70-80 km/h, gusting 90.",
         (11, 94, 124), "cyclone",
     ),
+    (
+        "EUROPE  •  POLITICS",
+        "UK-EU reset summit opens",
+        "On food trade and youth mobility.",
+        TEAL, "flag",
+    ),
+    (
+        "ASIA  •  POLITICS",
+        "Prabowo, Xi talk South China Sea",
+        "Prabowo met Xi on trade and sea.",
+        RED, "flag",
+    ),
+    (
+        "ASIA  •  JUSTICE",
+        "Kakao founder acquittal upheld",
+        "Kim Beom-su cleared of charges.",
+        GREEN, "building",
+    ),
+    (
+        "MIDDLE EAST  •  SECURITY",
+        "Iraq troops enter militia stronghold",
+        "Forces move into Jurf al-Sakhar.",
+        RED, "burst",
+    ),
+    (
+        "MIDDLE EAST  •  ENERGY",
+        "Tankers hit mines near Hormuz",
+        "Three tankers hit mines, caught fire.",
+        ORANGE, "drop",
+    ),
+    (
+        "MIDDLE EAST  •  WAR",
+        "Israel strikes Hezbollah site",
+        "Israel hit Beqaa site again.",
+        PURPLE, "burst",
+    ),
+]
+
+# Index lines are shortened to fit one line at scale 2.
+# (number, line, accent)
+INDEX = [
+    (13, "13 Poland probes", PURPLE),
+    (14, "14 Taiwan flags 2,700", RED),
+    (15, "15 Indonesia vs Google", RED),
+    (16, "16 Georgia gas blast", PURPLE),
+    (17, "17 Malawi fuel crisis", AMBER),
+    (18, "18 Phillips century", TEAL),
+    (19, "19 Merz promises talks", PURPLE),
+    (20, "20 Drones ground Genoa", PURPLE),
+    (21, "21 Mossad pushes Iran", ORANGE),
+    (22, "22 US war cost $48.3bn", GREEN),
+    (23, "23 AF1 phones bagged", GREEN),
+    (24, "24 US sanctions gangs", GREEN),
+    (25, "25 Kenya judiciary", AMBER),
+    (26, "26 Lula visits Raoni", GREEN),
+    (27, "27 AI chips for China", GREEN),
+    (28, "28 Meta climate vow", INK),
+    (29, "29 Word: 'Human'", INK),
+    (30, "30 Quake off Noumea", TEAL),
+]
+
+# (name, count, accent) — counts sum to 30; story 5 (COP31) counts
+# as GLOBAL, so GLOBAL is 5, 28, 29.
+REGIONS = [
+    ("ASIA", 6, RED),
+    ("EUROPE", 6, PURPLE),
+    ("MIDDLE EAST", 5, ORANGE),
+    ("AMERICAS", 6, GREEN),
+    ("AFRICA", 2, AMBER),
+    ("OCEANIA", 2, TEAL),
+    ("GLOBAL", 3, INK),
+]
+
+# (figure, label, accent)
+FIGURES = [
+    ("-4.8%", "Nikkei falls", RED),
+    ("$111.50", "Anthropic IPO", GREEN),
+    ("$120bn", "Africa asks", TEAL),
+    ("2,700", "Taiwan flags", PURPLE),
+    ("19,000", "channels cut", ORANGE),
+    ("5.6", "off Noumea", (11, 94, 124)),
+]
+
+# (number, longitude, latitude, accent); a few nudged so the pins
+# do not touch in crowded Europe.
+PINS = [
+    (1, 139.7, 35.7, RED),       # Tokyo
+    (2, -74.0, 40.7, GREEN),     # New York
+    (3, 46.7, 24.6, ORANGE),     # Riyadh
+    (4, 31.5, 50.4, PURPLE),     # Kyiv
+    (5, 30.7, 36.9, ORANGE),     # Antalya
+    (6, 85.0, 20.0, RED),        # Odisha
+    (7, 3.0, 50.85, PURPLE),     # Brussels
+    (8, 106.8, -6.2, RED),       # Jakarta
+    (13, 17.5, 53.0, PURPLE),    # Poland
+    (17, 34.0, -13.5, AMBER),    # Malawi
+    (18, 174.8, -41.3, TEAL),    # Wellington
+    (30, 165.5, -21.5, TEAL),    # New Caledonia
+]
+
+# Coarse continent outlines as (longitude, latitude) polygons.
+CONTINENTS = [
+    # North America
+    [(-168, 66), (-145, 70), (-130, 71), (-120, 69), (-105, 68),
+     (-95, 69), (-85, 66), (-80, 62), (-70, 58), (-60, 52), (-65, 45),
+     (-70, 42), (-75, 35), (-80, 25), (-84, 30), (-90, 21), (-95, 19),
+     (-100, 17), (-105, 20), (-112, 24), (-117, 32), (-124, 40),
+     (-125, 48), (-132, 55), (-145, 60), (-158, 58), (-165, 60)],
+    # South America
+    [(-80, 10), (-77, 5), (-72, 2), (-64, -2), (-55, -5), (-48, -8),
+     (-40, -10), (-35, -8), (-38, -15), (-40, -22), (-48, -27),
+     (-55, -35), (-62, -40), (-68, -50), (-72, -54), (-74, -48),
+     (-73, -38), (-71, -28), (-70, -18), (-76, -10), (-80, -4),
+     (-81, 2)],
+    # Africa
+    [(-17, 15), (-12, 22), (-10, 30), (-6, 33), (0, 36), (10, 37),
+     (20, 32), (30, 31), (33, 28), (36, 22), (40, 15), (43, 12),
+     (51, 11), (48, 5), (44, -2), (40, -8), (38, -15), (35, -22),
+     (32, -29), (28, -33), (20, -35), (16, -30), (14, -22), (12, -16),
+     (10, -8), (9, -2), (9, 4), (0, 5), (-8, 5), (-13, 8), (-17, 12)],
+    # Europe
+    [(-10, 36), (-9, 42), (-2, 44), (-1, 46), (0, 48), (2, 51), (5, 53),
+     (8, 55), (8, 57), (12, 56), (18, 55), (21, 54), (24, 56), (24, 58),
+     (28, 59), (30, 60), (25, 62), (22, 65), (18, 69), (14, 70),
+     (10, 64), (6, 58), (2, 55), (-2, 50), (-5, 48), (-8, 43),
+     (-10, 38)],
+    # Britain
+    [(-5, 50), (-3, 53), (-5, 56), (-3, 58), (-1, 58), (0, 55), (1, 52),
+     (-2, 51)],
+    # Asia
+    [(28, 40), (30, 45), (32, 50), (35, 55), (38, 60), (35, 62),
+     (30, 62), (40, 66), (55, 68), (70, 70), (85, 72), (100, 73),
+     (120, 72), (140, 71), (160, 69), (170, 66), (162, 60), (158, 54),
+     (150, 50), (142, 46), (140, 40), (136, 34), (130, 31), (127, 35),
+     (123, 38), (120, 32), (118, 25), (112, 21), (108, 14), (105, 8),
+     (100, 6), (97, 10), (94, 16), (91, 21), (87, 22), (84, 19),
+     (80, 13), (77, 8), (74, 12), (70, 20), (66, 24), (61, 25),
+     (56, 26), (52, 27), (49, 29), (46, 29), (42, 28), (38, 28),
+     (35, 29), (32, 31), (30, 35), (28, 38)],
+    # Australia
+    [(113, -22), (114, -28), (115, -34), (118, -35), (124, -33),
+     (129, -32), (132, -32), (135, -35), (138, -35), (140, -38),
+     (145, -38), (150, -37), (153, -32), (153, -27), (150, -22),
+     (146, -19), (142, -11), (140, -14), (136, -12), (132, -12),
+     (128, -14), (124, -16), (120, -20), (114, -21)],
+    # New Zealand
+    [(167, -45), (168, -42), (170, -41), (172, -40), (174, -38),
+     (176, -37), (175, -39), (173, -41), (171, -42), (169, -44)],
+    [(166, -46), (167, -44), (168, -45), (167, -47)],
+    # Indonesia
+    [(95, 5), (98, 2), (102, -2), (105, -5), (110, -7), (115, -8),
+     (120, -9), (125, -8), (128, -5), (131, -3), (135, -3), (138, -6),
+     (141, -8), (136, -8), (130, -6), (125, -8), (120, -10), (114, -9),
+     (108, -7), (102, -4), (97, 2)],
+    # Japan
+    [(130, 31), (132, 33), (135, 34), (138, 35), (140, 37), (141, 39),
+     (143, 42), (145, 44), (143, 42), (141, 38), (139, 35), (136, 34),
+     (133, 33)],
 ]
 
 def draw_icon(d, kind, box, accent):
@@ -477,67 +635,234 @@ def draw_icon(d, kind, box, accent):
         d.fill_rect(x0 + 10, y1 - 12, x1 - 10, y1 - 6, (200, 210, 220))
 
 
+def draw_icon2(d, kind, box, accent):
+    """More flat icons, in the same 100x100 style as draw_icon."""
+    x0, y0, x1, y1 = box
+    cx = (x0 + x1) // 2
+    cy = (y0 + y1) // 2
+    if kind == "flag":
+        # flag on a pole, ground line below
+        d.line(x0 + 28, y0 + 82, x0 + 28, y0 + 18, INK, 4)
+        d.disc(x0 + 28, y0 + 15, 3, AMBER)
+        d.polygon([(x0 + 28, y0 + 20), (x0 + 78, y0 + 30), (x0 + 28, y0 + 42)],
+                  accent)
+        d.polygon([(x0 + 28, y0 + 44), (x0 + 66, y0 + 52), (x0 + 28, y0 + 58)],
+                  (200, 210, 220))
+        d.fill_rect(x0 + 16, y0 + 82, x0 + 84, y0 + 86, (200, 210, 220))
+    elif kind == "building":
+        # courthouse: triangle roof, columns, steps
+        d.polygon([(x0 + 8, y0 + 42), (x0 + 50, y0 + 14), (x0 + 92, y0 + 42)],
+                  INK)
+        d.fill_rect(x0 + 12, y0 + 42, x0 + 88, y0 + 50, INK)
+        for bx in (18, 34, 58, 74):
+            d.fill_rect(x0 + bx, y0 + 50, x0 + bx + 8, y0 + 76,
+                        (200, 210, 220))
+        d.fill_rect(x0 + 45, y0 + 60, x0 + 55, y0 + 76, INK)
+        d.fill_rect(x0 + 10, y0 + 76, x0 + 90, y0 + 82, INK)
+        d.fill_rect(x0 + 6, y0 + 82, x0 + 94, y0 + 86, (200, 210, 220))
+    elif kind == "burst":
+        # starburst: twelve rays around a centre disc
+        for ang in range(0, 360, 30):
+            a = math.radians(ang)
+            d.line(cx, cy, cx + int(34 * math.cos(a)),
+                   cy + int(34 * math.sin(a)), accent, 4)
+        d.disc(cx, cy, 9, accent)
+        d.disc(cx, cy, 4, WHITE)
+    elif kind == "drop":
+        # flame: outer teardrop, inner flame
+        d.polygon([(cx, y0 + 12), (cx + 20, y0 + 42), (cx + 18, y0 + 68),
+                   (cx - 18, y0 + 68), (cx - 20, y0 + 42)], ORANGE)
+        d.polygon([(cx, y0 + 32), (cx + 11, y0 + 52), (cx + 9, y0 + 66),
+                   (cx - 9, y0 + 66), (cx - 11, y0 + 52)], AMBER)
+
+
+_ICON_CACHE = {}
+
+
+def icon_canvas(kind, accent):
+    """Render an icon once onto a 100x100 canvas (cached by kind)."""
+    c = Canvas(100, 100, (238, 242, 245))
+    if kind in ("chart_down", "chart_up", "tower", "city", "globe",
+                "cyclone"):
+        draw_icon(c, kind, (0, 0, 100, 100), accent)
+    else:
+        draw_icon2(c, kind, (0, 0, 100, 100), accent)
+    return c
+
+
+def blit_icon(d, kind, accent, x0, y0, x1, y1):
+    """Scale a cached 100x100 icon onto (x0, y0, x1, y1), nearest pixel."""
+    key = (kind, accent)
+    src = _ICON_CACHE.get(key)
+    if src is None:
+        src = icon_canvas(kind, accent)
+        _ICON_CACHE[key] = src
+    tw, th = x1 - x0, y1 - y0
+    for ty in range(th):
+        sy = ty * 100 // th
+        for tx in range(tw):
+            sx = tx * 100 // tw
+            i = (sy * 100 + sx) * 3
+            d.set(x0 + tx, y0 + ty, tuple(src.px[i:i + 3]))
+
+
+# World map projection: longitude -180..180, latitude 80..-60.
+MAP_X0, MAP_Y0, MAP_W, MAP_H = 24, 742, 420, 174
+
+
+def project(lon, lat):
+    x = MAP_X0 + (lon + 180) / 360 * MAP_W
+    y = MAP_Y0 + (80 - lat) / 140 * MAP_H
+    return int(round(x)), int(round(y))
+
+
 def build_image():
     d = Canvas(W, H, PAPER)
     # outer frame
-    d.rect(0, 0, W, H, INK, 6)
+    d.rect(0, 0, W, H, INK, 4)
 
-    # ---- header (navy band) ----
-    d.fill_rect(6, 6, W - 7, 150, NAVY)
-    draw_text(d, 36, 26, "FRIDAY  •  20 NOVEMBER 2026", 4, AMBER)
-    draw_text(d, 36, 76, "THE WORLD IN ONE DAY", 6, WHITE)
-    # "6 stories" badge, right side of header
-    d.rounded_rect(856, 34, 988, 116, 10, NAVY, outline=AMBER, width=3)
-    draw_text(d, 922, 68, "6", 6, WHITE, anchor="mm")
-    draw_text(d, 922, 100, "STORIES", 2, AMBER, anchor="mm")
+    # ---- masthead (y 0-86) ----
+    draw_text(d, 32, 8, "THE WORLD IN ONE DAY", 2, INK)
+    draw_text(d, W // 2, 46, "FRIDAY 20 NOVEMBER 2026", 7, INK,
+              anchor="mm")
+    draw_text(d, W // 2, 79,
+              "30 STORIES - EVERY CONTINENT - ALL FROM THIS ONE DAY",
+              2, INK, anchor="mm")
+    d.fill_rect(24, 86, 1000, 88, INK)
 
-    # ---- subheader strip ----
-    d.fill_rect(6, 150, W - 7, 188, (232, 222, 196))
-    draw_text(d, 36, 160, "Six stories, reported on 20 November 2026.",
-              2, INK)
+    # ---- region strip (y 88-118) ----
+    widths = [110, 130, 190, 150, 120, 140, 136]
+    cx = 24
+    bounds = []
+    for (name, count, accent), w in zip(REGIONS, widths):
+        bounds.append(cx)
+        draw_text(d, cx + 10, 93, str(count), 3, accent)
+        draw_text(d, cx + 33, 97, name, 2, INK)
+        cx += w
+    for bx in bounds[1:]:
+        d.fill_rect(bx - 1, 90, bx + 1, 116, (200, 205, 210))
+    d.fill_rect(24, 118, 1000, 120, INK)
 
-    # ---- grid: 2 cols x 3 rows ----
-    gx, gy = 24, 204
-    gw, gh, gap = 476, 232, 16
-    for i, (kicker, headline, body, accent, icon) in enumerate(STORIES):
-        col, row = i % 2, i // 2
-        x0 = gx + col * (gw + gap)
-        y0 = gy + row * (gh + gap)
-        x1, y1 = x0 + gw, y0 + gh
-        # card
-        d.rounded_rect(x0, y0, x1, y1, 10, CARD, outline=(200, 205, 210),
-                       width=2)
-        d.fill_rect(x0 + 10, y0, x1 - 10, y0 + 7, accent)
-        # icon panel (left)
-        ix0, iy0, ix1, iy1 = x0 + 14, y0 + 22, x0 + 112, y1 - 14
-        d.rounded_rect(ix0, iy0, ix1, iy1, 8, (238, 242, 245))
-        draw_icon(d, icon, (ix0, iy0, ix1, iy1), accent)
-        # text (right of icon)
-        tx = x0 + 126
-        tw = x1 - tx - 16
-        draw_text(d, tx, y0 + 22, kicker, 2, accent)
-        head_lines = wrap(headline, 3, tw)
+    # ---- figures row (y 120-168) ----
+    fx = 24
+    for (figure, label, accent), w in zip(FIGURES,
+                                          [158, 170, 160, 162, 165, 161]):
+        draw_text(d, fx + w // 2, 138, figure, 4, accent, anchor="mm")
+        draw_text(d, fx + w // 2, 161, label, 2, INK, anchor="mm")
+        if fx > 24:
+            d.fill_rect(fx - 1, 122, fx + 1, 168, (200, 205, 210))
+        fx += w
+    d.fill_rect(24, 170, 1000, 172, INK)
+
+    # ---- leads (y 172-380, 3 columns) ----
+    for i, (kicker, headline, body, accent, icon) in enumerate(LEADS):
+        x0 = 24 + i * 329
+        # illustration panel on top
+        d.fill_rect(x0 + 4, 172, x0 + 314, 260, (238, 242, 245))
+        d.fill_rect(x0 + 4, 172, x0 + 314, 176, accent)
+        draw_icon(d, icon, (x0 + 115, 172, x0 + 203, 260), accent)
+        # kicker, headline, body
+        draw_text(d, x0 + 4, 266, kicker, 2, accent)
+        head_lines = wrap(headline, 3, 310)
         assert len(head_lines) <= 2, headline
-        hy = y0 + 48
+        hy = 284
         for ln in head_lines:
-            draw_text(d, tx, hy, ln, 3, INK)
-            hy += 26
-        body_lines = wrap(body, 2, tw)
-        assert len(body_lines) <= 4, body
-        by = hy + 8
+            draw_text(d, x0 + 4, hy, ln, 3, INK)
+            hy += 24
+        body_lines = wrap(body, 2, 310)
+        assert len(body_lines) <= 3, body
+        by = 334
         for ln in body_lines:
-            draw_text(d, tx, by, ln, 2, (45, 55, 75))
-            by += 18
-        assert by <= y1 - 8, headline
+            draw_text(d, x0 + 4, by, ln, 2, (45, 55, 75))
+            by += 16
+        assert by <= 382, headline  # last line ends at by - 2
+        if i:
+            d.fill_rect(x0 - 6, 172, x0 - 4, 380, (200, 205, 210))
 
-    # ---- footer (navy strip) ----
-    d.fill_rect(6, 936, W - 7, H - 7, NAVY)
-    draw_text(d, 36, 950,
-              "Sources: Reuters, WSJ, Morningstar, India Meteorological Department.",
-              2, WHITE)
-    draw_text(d, 36, 978,
-              "All six happened or were first reported on 20 November 2026.",
-              2, (200, 210, 225))
+    # ---- grid (y 384-714, 3 cols x 3 rows) ----
+    for i, (kicker, headline, body, accent, icon) in enumerate(GRID):
+        col, row = i % 3, i // 3
+        x0 = 24 + col * 329
+        y0 = 384 + row * 111
+        x1, y1 = x0 + 318, y0 + 108
+        d.rounded_rect(x0, y0, x1, y1, 8, CARD, outline=(200, 205, 210),
+                       width=2)
+        d.fill_rect(x0 + 10, y0, x1 - 10, y0 + 6, accent)
+        assert text_width(kicker, 2) <= 298, kicker
+        draw_text(d, x0 + 10, y0 + 10, kicker, 2, accent)
+        # mini icon, left
+        d.fill_rect(x0 + 10, y0 + 30, x0 + 74, y0 + 94, (238, 242, 245))
+        blit_icon(d, icon, accent, x0 + 10, y0 + 30, x0 + 74, y0 + 94)
+        # headline and body, right of the icon
+        head_lines = wrap(headline, 2, 228)
+        assert len(head_lines) <= 2, headline
+        hy = y0 + 30
+        for ln in head_lines:
+            draw_text(d, x0 + 82, hy, ln, 2, INK)
+            hy += 18
+        body_lines = wrap(body, 2, 228)
+        assert len(body_lines) <= 2, body
+        by = y0 + 66
+        for ln in body_lines:
+            draw_text(d, x0 + 82, by, ln, 2, (45, 55, 75))
+            by += 18
+        assert by <= y0 + 102, headline  # last line ends at by - 4
+
+    # ---- map + index band (y 718-928) ----
+    d.fill_rect(24, 716, 1000, 718, INK)
+    draw_text(d, 24, 722, "WHERE IT HAPPENED", 2, INK)
+    draw_text(d, 460, 722, "THE DAY IN BRIEF", 2, INK)
+    # ocean
+    d.fill_rect(MAP_X0, MAP_Y0, MAP_X0 + MAP_W, MAP_Y0 + MAP_H,
+                (214, 228, 238))
+    # continents, light grey with dark outlines
+    for poly in CONTINENTS:
+        pts = [project(lon, lat) for lon, lat in poly]
+        d.polygon(pts, (198, 198, 192))
+        d.polyline(pts + [pts[0]], INK, 2)
+    # numbered pins
+    for num, lon, lat, accent in PINS:
+        px, py = project(lon, lat)
+        d.disc(px, py, 7, accent)
+        d.ellipse_outline(px, py, 7, 7, INK, 1)
+        draw_text(d, px, py, str(num), 1, WHITE, anchor="mm")
+    # index, two columns of 9; the number in the region colour
+    for i, (num, line, accent) in enumerate(INDEX):
+        col = i // 9
+        row = i % 9
+        ix = 460 + col * 276
+        iy = 744 + row * 19
+        assert text_width(line, 2) <= 264, line
+        head, rest = line.split(" ", 1)
+        draw_text(d, ix, iy, head + " ", 2, accent)
+        draw_text(d, ix + text_width(head + " ", 2), iy, rest, 2, INK)
+
+    # ---- footer (y 918-1018) ----
+    d.fill_rect(24, 918, 1000, 920, INK)
+    blocks = [
+        ("DATE CHECK: ",
+         "DATE CHECK: Every story on this page happened, or was first "
+         "reported, on Friday 20 November 2026. Claims are attributed "
+         "to their sources."),
+        ("LEFT OUT AS OTHER DAYS' NEWS: ",
+         "LEFT OUT AS OTHER DAYS' NEWS: 19 NOV: UK 1,000-drone pledge "
+         "- ICJ Myanmar ruling - Shenzhen summit - Pete Rose pardon"),
+        ("Sources: ",
+         "Sources: Reuters, AP, AFP, WSJ, DW, The Nation, Al Jazeera. "
+         "Pictures and map: original, drawn in code."),
+    ]
+    fy = 922
+    for label, text in blocks:
+        lines = wrap(text, 2, 976)
+        assert len(lines) <= 2, text
+        first = lines[0]
+        rest = first[len(label):]
+        draw_text(d, 24, fy, label, 2, RED)
+        draw_text(d, 24 + text_width(label, 2), fy, rest, 2, INK)
+        for j, ln in enumerate(lines[1:], 1):
+            draw_text(d, 24, fy + j * 16, ln, 2, INK)
+        fy += len(lines) * 16
+    assert fy <= 1018, "footer overflow"
     return d
 
 
