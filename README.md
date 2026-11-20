@@ -5,14 +5,14 @@
 [![reward](https://make.fun/badge/news-image-20261120/rundex10/-news-image-20261120/reward.svg)](https://make.fun/bounty/news-image-20261120?utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120)
 
 One image that sums up the world news of Friday 20 November 2026:
-thirty stories, reported on 20 November 2026, drawn programmatically
-with the Python standard library only — no network, no AI image
-generation, no garbled text.
+thirty-five stories, reported on 20 November 2026, drawn
+programmatically with the Python standard library only — no network,
+no AI image generation, no garbled text.
 
-## The thirty stories
+## The thirty-five stories
 
-All thirty happened or were first reported on 20 November 2026, in
-some time zone (the competition's own definition of "that day's
+All thirty-five happened or were first reported on 20 November 2026,
+in some time zone (the competition's own definition of "that day's
 news"). Each was checked against live news reporting on 20 November
 2026 before it was drawn.
 
@@ -20,17 +20,23 @@ Leads:
 1. **Asia markets plunge on AI fears** — Nikkei fell 4.8%, Kospi over
    5% and Taiwan's Taiex 6.4% on Friday 20 November as AI valuations
    rattled investors. (Morningstar / Reuters, 20 Nov 2026)
-2. **Anthropic debuts in record IPO** — Shares opened at $111.50,
-   above the $83 price, and closed up 17% at $97.17, in the largest
-   IPO on record ($81bn). (WSJ / Reuters, reported 20 Nov 2026)
-3. **Missile hits Riyadh's tallest tower** — A Houthi missile damaged
-   the 80-storey PIF Tower, blowing out windows on seven floors.
-   No injuries reported. (Reuters / WSJ, reported 20 Nov 2026)
+2. **Anthropic ends first day up 17%** — Shares closed at $97.17, up
+   17% on the $83 price, after opening at $111.50. The first trading
+   day was Thursday 19 November in the US (Friday morning in Asia),
+   and the $83 pricing was set on Thursday, so the page reports only
+   the close, as a Friday follow-up. (WSJ / Reuters, reported
+   20 Nov 2026)
+3. **Saudis vow tower response** — Saudi Arabia vowed a response
+   after Thursday's Houthi missile hit the 80-storey PIF Tower in
+   Riyadh. No injuries reported. The strike itself was Thursday
+   19 November; the vow is Friday's news. (Reuters / WSJ,
+   20 Nov 2026)
 
 Grid:
-4. **Strikes damage Kyiv embassies** — Russian strikes hit the
-   Austrian and Dutch embassies in Kyiv on Thursday, killing one
-   person. (Reuters / AFP, reported 20 Nov 2026)
+4. **Kyiv embassy damage confirmed** — Austria and the Netherlands
+   confirmed damage to their embassies in Kyiv from Thursday's
+   Russian strikes, which killed one person. The EU said it would
+   summon Russia's envoy. (Reuters / AFP, reported 20 Nov 2026)
 5. **COP31 draft drops fossil fuels** — On its final day (Friday
    20 November, Antalya), the draft deal had no mention of coal, oil
    or gas. Africa seeks $120bn a year in adaptation finance.
@@ -60,32 +66,55 @@ Index:
     NZ · 19. Merz promises Ukraine talks · 20. Drones ground Genoa
     airport · 21. Mossad chief pushes Iran strikes · 22. US war cost
     hits $48.3bn · 23. Phones bagged on Air Force One · 24. US
-    sanctions gangs · 25. Kenya judiciary report out · 26. Lula visits
-    Chief Raoni · 27. AI chips for China approved · 28. Meta revises
+    sanctions gangs · 25. Kenya judiciary report out · 26. Russia
+    rejects NATO guarantees: deputy foreign minister Sergei Ryabkov
+    rejected NATO-style security guarantees for Ukraine (Reuters,
+    20 Nov 2026) · 27. AI chips for China approved · 28. Meta revises
     climate targets · 29. 'Human' is Word of the Year · 30. 5.6 quake
-    near New Caledonia.
+    near New Caledonia · 31. US-Mexico labour row: the US trade
+    representative invoked the USMCA labour mechanism over workers'
+    rights at Polygroup in Chihuahua (USTR, 20 Nov 2026) ·
+    32. Mexico clubs' CAS hearing: the football federation said it
+    was confident of keeping promotion and relegation closed after
+    two days of hearings (Reuters, 20 Nov 2026) · 33. SA blackout
+    lingers: storm-toppled towers left South Australia's Eyre
+    Peninsula dark into Friday, 10,000+ properties still out
+    (ABC, 20 Nov 2026) · 34. NextDC pay revolt: shareholders voted
+    down the pay report by 72% at Friday's AGM, a second strike
+    (Reuters, 20 Nov 2026) · 35. SoftBank dives 16%: shares plunged
+    as much as 16% as Anthropic's debut rattled AI valuations
+    (CNBC / Reuters, 20 Nov 2026).
 
 Checked and left out: the UK's pledge of 1,000+ long-range drones
 for Ukraine was announced in Berlin on 19 November, not 20 November,
-so it is not one of the thirty. The 19 November ICJ Myanmar ruling,
-the Shenzhen Trump–Xi–Putin summit and the Pete Rose pardon were
-likewise left out.
+so it is not one of the thirty-five. The 19 November ICJ Rohingya
+genocide judgment, the Trump-Xi-Putin meeting in Shenzhen, the Pete
+Rose pardon, Anthropic's $83 IPO pricing, the GTA VI midnight unlock,
+the Van Gogh record $190.4m sale, the EU's proposed 45bn euro loan
+for Ukraine, the US-Venezuela military deal, Han Duck-soo's
+acquittal, the Crimean Bridge attack and the Houthi strike on
+Riyadh's PIF Tower were likewise left out. Three 19-November events
+appear only as their Friday follow-ups: the Saudi response vow, the
+Kyiv embassy damage confirmation and Anthropic's first-day close.
 
 ## Design
 
 1024×1024 newspaper front page: a masthead naming the day, a region
 strip counting the stories per region, a row of six big figures,
 three leads with illustration panels, nine grid cards with mini
-icons, a world map with numbered pins beside an 18-story index,
+icons, a world map with numbered pins beside a 23-story index,
 and a footer with a date check, the stories left out as other
 days' news, and the sources. Off-white paper, dark navy ink, one
 accent colour per region. Text is set in a built-in 5x7 pixel font,
 drawn scaled — the program rasterises everything itself with the
 standard library only, because the grader's image ships neither
-Pillow nor any font files. Every string is measured and wrapped to
-fit its box; nothing is clipped. Grid and index lines are shortened
-from the full headlines so they fit their boxes; the full wording
-is in the story list above.
+Pillow nor any font files. The page is drawn at 2048×2048 and
+box-downscaled to 1024×1024, so the pixel font's edges anti-alias
+instead of looking blocky; the output is still byte-identical
+across runs. Every string is measured and wrapped to fit its box;
+nothing is clipped. Grid and index lines are shortened from the
+full headlines so they fit their boxes; the full wording is in
+the story list above.
 
 ## Run it
 

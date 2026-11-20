@@ -18,14 +18,23 @@ integer factors.
     python3 main.py            # writes /output/entry.png, or
     MAKEFUN_OUTPUT_DIR=out python3 main.py
 
-Thirty stories, all happened or first reported on Friday 20 November
-2026 (in some time zone): 3 leads with illustration panels, 9 grid
-cards, and 18 more in the index, with a region strip, a figures row,
-a world map with numbered pins, and a footer naming what was left
-out as other days' news.
+Thirty-five stories, all happened or first reported on Friday 20
+November 2026 (in some time zone): 3 leads with illustration panels,
+9 grid cards, and 23 more in the index, with a region strip, a
+figures row, a world map with numbered pins, and a footer naming what
+was left out as other days' news.
+The page is drawn at 2048x2048 and box-downscaled to 1024x1024, so
+the pixel font's edges anti-alias instead of looking blocky.
+Three stories that began on Thursday 19 November (the Riyadh tower
+strike, the Kyiv strikes, Anthropic's first trading day) appear only
+as their Friday 20 November follow-ups.
 Checked and left out: the UK's 1,000-drone pledge for Ukraine, the
-ICJ Myanmar ruling, the Shenzhen Trump-Xi-Putin summit and the Pete
-Rose pardon were all announced on 19 November, not 20 November.
+ICJ Rohingya judgment, the Trump-Xi-Putin meeting in Shenzhen, the
+Pete Rose pardon, Anthropic's $83 IPO pricing, the GTA VI midnight
+unlock, the Van Gogh record $190.4m sale, the EU's proposed 45bn
+euro loan for Ukraine, the US-Venezuela military deal, Han
+Duck-soo's acquittal, the Crimean Bridge attack and the Houthi
+strike on Riyadh's PIF Tower were all 19 November, not 20 November.
 """
 
 import math
@@ -187,6 +196,97 @@ class Canvas:
 
 
 # ------------------------------------------------------------- PNG output
+
+class ScaleCanvas:
+    """A 2x canvas wrapper for supersampled rendering.
+
+    Drawing calls use logical 1024 coordinates; they are rendered
+    onto a 2048 canvas with a half-pixel offset (2c+1), so that every
+    edge straddles the 2x2 blocks of a later box downscale and comes
+    out anti-aliased instead of blocky. A plain 2x scale with integer
+    coordinates would give zero text smoothing, because glyph pixels
+    are axis-aligned rects that land exactly on 2x2 blocks.
+    `set` is the exception: one logical pixel must fill a whole 2x2
+    block, or a blitted icon would come out at quarter strength.
+    """
+
+    def __init__(self, canvas):
+        self.c = canvas
+        self.w = canvas.w // 2
+        self.h = canvas.h // 2
+
+    def set(self, x, y, color):
+        self.c.fill_rect(2 * x, 2 * y, 2 * x + 2, 2 * y + 2, color)
+
+    def fill_rect(self, x0, y0, x1, y1, color):
+        self.c.fill_rect(2 * x0 + 1, 2 * y0 + 1, 2 * x1 + 1, 2 * y1 + 1,
+                         color)
+
+    def rect(self, x0, y0, x1, y1, color, width=1):
+        self.c.rect(2 * x0 + 1, 2 * y0 + 1, 2 * x1 + 1, 2 * y1 + 1,
+                    color, 2 * width)
+
+    def disc(self, cx, cy, r, color):
+        self.c.disc(2 * cx + 1, 2 * cy + 1, 2 * r, color)
+
+    def line(self, x0, y0, x1, y1, color, width=1):
+        self.c.line(2 * x0 + 1, 2 * y0 + 1, 2 * x1 + 1, 2 * y1 + 1,
+                    color, 2 * width)
+
+    def polyline(self, pts, color, width=1):
+        self.c.polyline([(2 * x + 1, 2 * y + 1) for x, y in pts], color,
+                        2 * width)
+
+    def polygon(self, pts, color):
+        self.c.polygon([(2 * x + 1, 2 * y + 1) for x, y in pts], color)
+
+    def ellipse(self, cx, cy, rx, ry, color):
+        self.c.ellipse(2 * cx + 1, 2 * cy + 1, 2 * rx, 2 * ry, color)
+
+    def ellipse_outline(self, cx, cy, rx, ry, color, width=1):
+        self.c.ellipse_outline(2 * cx + 1, 2 * cy + 1, 2 * rx, 2 * ry,
+                               color, 2 * width)
+
+    def arc(self, cx, cy, rx, ry, start_deg, end_deg, color, width=1):
+        self.c.arc(2 * cx + 1, 2 * cy + 1, 2 * rx, 2 * ry, start_deg,
+                   end_deg, color, 2 * width)
+
+    def rounded_rect(self, x0, y0, x1, y1, radius, color, outline=None,
+                     width=2):
+        self.c.rounded_rect(2 * x0 + 1, 2 * y0 + 1, 2 * x1 + 1, 2 * y1 + 1,
+                            2 * radius, color, outline, 2 * width)
+
+
+def downscale(src):
+    """Box-downscale a 2x canvas to 1x by averaging 2x2 blocks.
+
+    Two passes of (a+b+1)//2: first horizontally into a temp buffer,
+    then vertically. Integer arithmetic only, so the result is
+    deterministic.
+    """
+    sw, sh = src.w, src.h
+    dw, dh = sw // 2, sh // 2
+    dst = Canvas(dw, dh, (0, 0, 0))
+    spx = src.px
+    dpx = dst.px
+    tmp = bytearray(dw * sh * 3)
+    for y in range(sh):
+        srow = y * sw * 3
+        trow = y * dw * 3
+        for x in range(dw):
+            si = srow + x * 6
+            ti = trow + x * 3
+            tmp[ti] = (spx[si] + spx[si + 3] + 1) // 2
+            tmp[ti + 1] = (spx[si + 1] + spx[si + 4] + 1) // 2
+            tmp[ti + 2] = (spx[si + 2] + spx[si + 5] + 1) // 2
+    for y in range(dh):
+        trow0 = (2 * y) * dw * 3
+        trow1 = (2 * y + 1) * dw * 3
+        drow = y * dw * 3
+        for x in range(dw * 3):
+            dpx[drow + x] = (tmp[trow0 + x] + tmp[trow1 + x] + 1) // 2
+    return dst
+
 
 def png_bytes(canvas):
     """Encode the canvas as a PNG (filter 0 rows, zlib level 9)."""
@@ -364,14 +464,14 @@ LEADS = [
     ),
     (
         "AMERICAS  •  TECH",
-        "Anthropic debuts in record IPO",
-        "Opened at $111.50, above the $83 price, closed up 17% at $97.17.",
+        "Anthropic ends first day up 17%",
+        "Closed at $97.17, up 17% on its $83 price, after opening at $111.50.",
         GREEN, "chart_up",
     ),
     (
         "MIDDLE EAST  •  WAR",
-        "Missile hits Riyadh tower",
-        "A Houthi missile hit the 80-storey PIF Tower. No injuries.",
+        "Saudis vow tower response",
+        "Saudis vow response after Thursday's missile hit the PIF Tower. No injuries.",
         ORANGE, "tower",
     ),
 ]
@@ -380,8 +480,8 @@ LEADS = [
 GRID = [
     (
         "EUROPE  •  WAR",
-        "Strikes damage Kyiv embassies",
-        "One killed; EU to summon envoy.",
+        "Kyiv embassy damage confirmed",
+        "Thursday's strikes; one killed.",
         PURPLE, "city",
     ),
     (
@@ -450,29 +550,34 @@ INDEX = [
     (23, "23 AF1 phones bagged", GREEN),
     (24, "24 US sanctions gangs", GREEN),
     (25, "25 Kenya judiciary", AMBER),
-    (26, "26 Lula visits Raoni", GREEN),
+    (26, "26 Russia rejects NATO", PURPLE),
     (27, "27 AI chips for China", GREEN),
     (28, "28 Meta climate vow", INK),
     (29, "29 Word: 'Human'", INK),
     (30, "30 Quake off Noumea", TEAL),
+    (31, "31 US-Mexico labor row", GREEN),
+    (32, "32 Mexico CAS hearing", GREEN),
+    (33, "33 SA blackout lingers", TEAL),
+    (34, "34 NextDC pay revolt", TEAL),
+    (35, "35 SoftBank dives 16%", RED),
 ]
 
-# (name, count, accent) — counts sum to 30; story 5 (COP31) counts
+# (name, count, accent) — counts sum to 35; story 5 (COP31) counts
 # as GLOBAL, so GLOBAL is 5, 28, 29.
 REGIONS = [
-    ("ASIA", 6, RED),
-    ("EUROPE", 6, PURPLE),
+    ("ASIA", 7, RED),
+    ("EUROPE", 7, PURPLE),
     ("MIDDLE EAST", 5, ORANGE),
-    ("AMERICAS", 6, GREEN),
+    ("AMERICAS", 7, GREEN),
     ("AFRICA", 2, AMBER),
-    ("OCEANIA", 2, TEAL),
+    ("OCEANIA", 4, TEAL),
     ("GLOBAL", 3, INK),
 ]
 
 # (figure, label, accent)
 FIGURES = [
     ("-4.8%", "Nikkei falls", RED),
-    ("$111.50", "Anthropic IPO", GREEN),
+    ("$92.57", "Brent crude", ORANGE),
     ("$120bn", "Africa asks", TEAL),
     ("2,700", "Taiwan flags", PURPLE),
     ("19,000", "channels cut", ORANGE),
@@ -646,59 +751,61 @@ def draw_lead(d, kind, box, accent):
     base = y1 - 10
     if kind == "chart_down":
         # axes
-        d.line(x0 + 16, base, x1 - 12, base, INK, 4)
-        d.line(x0 + 16, base, x0 + 16, y0 + 16, INK, 4)
-        # seven falling bars; the last two turn red
-        for i, h in enumerate([56, 44, 50, 34, 40, 24, 12]):
-            bx = x0 + 28 + i * 40
-            col = accent if i >= 5 else (200, 210, 220)
-            d.fill_rect(bx, base - h, bx + 26, base, col)
+        d.line(x0 + 12, base, x1 - 10, base, INK, 4)
+        d.line(x0 + 12, base, x0 + 12, y0 + 12, INK, 4)
+        # nine falling bars, filling more of the panel; the last two
+        # turn red
+        heights = [62, 50, 56, 42, 46, 32, 36, 22, 12]
+        for i, h in enumerate(heights):
+            bx = x0 + 24 + i * 32
+            col = accent if i >= 7 else (200, 210, 220)
+            d.fill_rect(bx, base - h, bx + 24, base, col)
         # falling line with arrowhead, riding just above the bar tops
-        pts = [(x0 + 41, base - 60), (x0 + 81, base - 48),
-               (x0 + 121, base - 54), (x0 + 161, base - 38),
-               (x0 + 201, base - 44), (x0 + 241, base - 28),
-               (x0 + 281, base - 16)]
+        pts = [(x0 + 36 + i * 32, base - h - 4)
+               for i, h in enumerate(heights)]
         d.polyline(pts, accent, 6)
-        d.polygon([(x0 + 281, base - 16), (x0 + 260, base - 14),
-                   (x0 + 264, base - 30)], accent)
+        d.polygon([(x0 + 292, base - 16), (x0 + 272, base - 14),
+                   (x0 + 276, base - 30)], accent)
     elif kind == "chart_up":
-        d.line(x0 + 16, base, x1 - 12, base, INK, 4)
-        d.line(x0 + 16, base, x0 + 16, y0 + 16, INK, 4)
-        # seven rising bars; the last two turn green
-        for i, h in enumerate([12, 24, 18, 34, 30, 48, 58]):
+        d.line(x0 + 12, base, x1 - 10, base, INK, 4)
+        d.line(x0 + 12, base, x0 + 12, y0 + 12, INK, 4)
+        # seven candlesticks, alternating green and red, each with a
+        # wick above the body and a short wick down to the axis
+        heights = [12, 20, 16, 28, 26, 38, 48]
+        for i, h in enumerate(heights):
             bx = x0 + 28 + i * 40
-            col = accent if i >= 5 else (200, 210, 220)
-            d.fill_rect(bx, base - h, bx + 26, base, col)
-        # rising line with arrowhead, riding just above the bar tops
-        pts = [(x0 + 41, base - 16), (x0 + 81, base - 28),
-               (x0 + 121, base - 22), (x0 + 161, base - 38),
-               (x0 + 201, base - 34), (x0 + 241, base - 52),
-               (x0 + 281, base - 62)]
+            col = accent if i % 2 == 0 else RED
+            d.line(bx + 13, base - h - 10, bx + 13, base, col, 2)
+            d.fill_rect(bx + 4, base - h - 4, bx + 22, base - 4, col)
+        # rising line with arrowhead, riding above the wicks
+        pts = [(x0 + 41 + i * 40, base - h - 18)
+               for i, h in enumerate(heights)]
         d.polyline(pts, accent, 6)
-        d.polygon([(x0 + 281, base - 62), (x0 + 264, base - 49),
-                   (x0 + 260, base - 65)], accent)
+        d.polygon([(x0 + 281, base - 66), (x0 + 264, base - 63),
+                   (x0 + 260, base - 77)], accent)
         # ANT oval, top-left, clear of the rising line
-        d.ellipse_outline(x0 + 70, y0 + 26, 38, 11, accent, 3)
-        draw_text(d, x0 + 70, y0 + 24, "ANT", 2, accent, anchor="mm")
+        d.ellipse_outline(x0 + 62, y0 + 22, 34, 10, accent, 3)
+        draw_text(d, x0 + 62, y0 + 20, "ANT", 2, accent, anchor="mm")
     elif kind == "tower":
-        # side buildings for depth
-        d.fill_rect(x0 + 18, base - 46, x0 + 62, base, (90, 100, 115))
-        d.fill_rect(x1 - 62, base - 58, x1 - 18, base, (90, 100, 115))
-        for wy in range(base - 42, base - 8, 12):
-            d.fill_rect(x0 + 26, wy, x0 + 36, wy + 6, (150, 180, 210))
+        # side buildings for depth, taller than before
+        d.fill_rect(x0 + 14, base - 56, x0 + 66, base, (90, 100, 115))
+        d.fill_rect(x1 - 66, base - 64, x1 - 14, base, (90, 100, 115))
+        for wy in range(base - 52, base - 8, 10):
+            d.fill_rect(x0 + 22, wy, x0 + 32, wy + 6, (150, 180, 210))
             d.fill_rect(x0 + 44, wy, x0 + 54, wy + 6, (150, 180, 210))
             d.fill_rect(x1 - 54, wy, x1 - 44, wy + 6, (150, 180, 210))
-            d.fill_rect(x1 - 36, wy, x1 - 26, wy + 6, (150, 180, 210))
-        # main tower
-        d.fill_rect(cx - 32, y0 + 10, cx + 32, base, INK)
-        for wy in range(y0 + 18, base - 8, 12):
-            d.fill_rect(cx - 24, wy, cx - 8, wy + 6, (150, 180, 210))
-            d.fill_rect(cx + 8, wy, cx + 24, wy + 6, (150, 180, 210))
+            d.fill_rect(x1 - 32, wy, x1 - 22, wy + 6, (150, 180, 210))
+        # main tower, wider and taller, with a fuller window grid
+        d.fill_rect(cx - 40, y0 + 6, cx + 40, base, INK)
+        for wy in range(y0 + 14, base - 8, 10):
+            d.fill_rect(cx - 29, wy, cx - 15, wy + 6, (150, 180, 210))
+            d.fill_rect(cx - 7, wy, cx + 7, wy + 6, (150, 180, 210))
+            d.fill_rect(cx + 15, wy, cx + 29, wy + 6, (150, 180, 210))
         # damaged band, struck by the missile streak
-        d.fill_rect(cx - 32, y0 + 46, cx + 32, y0 + 60, accent)
-        d.line(x0 + 10, y0 + 6, cx - 14, y0 + 53, accent, 5)
-        d.polygon([(cx - 14, y0 + 53), (cx - 36, y0 + 55),
-                   (cx - 30, y0 + 38)], accent)
+        d.fill_rect(cx - 40, y0 + 44, cx + 40, y0 + 58, accent)
+        d.line(x0 + 4, y0 + 4, cx - 16, y0 + 51, accent, 6)
+        d.polygon([(cx - 16, y0 + 51), (cx - 40, y0 + 53),
+                   (cx - 34, y0 + 34)], accent)
         # ground
         d.fill_rect(x0 + 10, base, x1 - 10, base + 4, (200, 210, 220))
 
@@ -784,8 +891,9 @@ def project(lon, lat):
     return int(round(x)), int(round(y))
 
 
-def build_image():
-    d = Canvas(W, H, PAPER)
+def build_image(d=None):
+    if d is None:
+        d = Canvas(W, H, PAPER)
     # outer frame
     d.rect(0, 0, W, H, INK, 4)
 
@@ -794,7 +902,7 @@ def build_image():
     draw_text(d, W // 2, 45, "FRIDAY 20 NOVEMBER 2026", 6, INK,
               anchor="mm")
     draw_text(d, W // 2, 79,
-              "30 STORIES - EVERY CONTINENT - ALL FROM THIS ONE DAY",
+              "35 STORIES - EVERY CONTINENT - ALL FROM THIS ONE DAY",
               2, INK, anchor="mm")
     d.fill_rect(24, 86, 1000, 88, INK)
 
@@ -894,12 +1002,15 @@ def build_image():
         d.disc(px, py, 6, accent)
         d.ellipse_outline(px, py, 6, 6, INK, 1)
         draw_text(d, px, py, str(num), 1, WHITE, anchor="mm")
-    # index, two columns of 9; the number in the region colour
+    # index, two columns of 12 and 11; leading 15 leaves a 1 px
+    # paper gap between the 14 px glyph rows (leading 14 let
+    # descenders touch the next row), starting 2 px under the
+    # header, last row ends 917, just above the footer rule
     for i, (num, line, accent) in enumerate(INDEX):
-        col = i // 9
-        row = i % 9
+        col = i // 12
+        row = i % 12
         ix = 460 + col * 276
-        iy = 744 + row * 19
+        iy = 738 + row * 15
         assert text_width(line, 2) <= 264, line
         head, rest = line.split(" ", 1)
         draw_text(d, ix, iy, head + " ", 2, accent)
@@ -914,7 +1025,8 @@ def build_image():
          "to their sources."),
         ("LEFT OUT AS OTHER DAYS' NEWS: ",
          "LEFT OUT AS OTHER DAYS' NEWS: 19 NOV: UK 1,000-drone pledge "
-         "- ICJ Myanmar ruling - Shenzhen summit - Pete Rose pardon"),
+         "- ICJ Rohingya ruling - Trump-Xi-Putin talks - Pete Rose "
+         "pardon - Anthropic $83 pricing - GTA VI unlock"),
         ("Sources: ",
          "Sources: Reuters, AP, AFP, WSJ, DW, The Nation, Al Jazeera. "
          "Pictures and map: original, drawn in code."),
@@ -939,7 +1051,11 @@ def main(argv):
     if "--output" in argv:
         out_dir = argv[argv.index("--output") + 1]
     os.makedirs(out_dir, exist_ok=True)
-    img = build_image()
+    # Supersampled render: draw at 2048x2048 through the ScaleCanvas
+    # wrapper, then box-downscale to 1024x1024 for the PNG.
+    big = Canvas(2 * W, 2 * H, PAPER)
+    build_image(ScaleCanvas(big))
+    img = downscale(big)
     path = os.path.join(out_dir, "entry.png")
     # zlib level 9 with filter-0 rows: deterministic output.
     with open(path, "wb") as f:
