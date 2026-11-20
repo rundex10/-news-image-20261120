@@ -635,6 +635,74 @@ def draw_icon(d, kind, box, accent):
         d.fill_rect(x0 + 10, y1 - 12, x1 - 10, y1 - 6, (200, 210, 220))
 
 
+def draw_lead(d, kind, box, accent):
+    """Panel-scale lead illustration in box (x0, y0, x1, y1), 310x88.
+
+    Same flat style as draw_icon, but drawn to fill the whole lead
+    panel instead of a small centred square.
+    """
+    x0, y0, x1, y1 = box
+    cx = (x0 + x1) // 2
+    base = y1 - 10
+    if kind == "chart_down":
+        # axes
+        d.line(x0 + 16, base, x1 - 12, base, INK, 4)
+        d.line(x0 + 16, base, x0 + 16, y0 + 16, INK, 4)
+        # seven falling bars; the last two turn red
+        for i, h in enumerate([56, 44, 50, 34, 40, 24, 12]):
+            bx = x0 + 28 + i * 40
+            col = accent if i >= 5 else (200, 210, 220)
+            d.fill_rect(bx, base - h, bx + 26, base, col)
+        # falling line with arrowhead, riding just above the bar tops
+        pts = [(x0 + 41, base - 60), (x0 + 81, base - 48),
+               (x0 + 121, base - 54), (x0 + 161, base - 38),
+               (x0 + 201, base - 44), (x0 + 241, base - 28),
+               (x0 + 281, base - 16)]
+        d.polyline(pts, accent, 6)
+        d.polygon([(x0 + 281, base - 16), (x0 + 260, base - 14),
+                   (x0 + 264, base - 30)], accent)
+    elif kind == "chart_up":
+        d.line(x0 + 16, base, x1 - 12, base, INK, 4)
+        d.line(x0 + 16, base, x0 + 16, y0 + 16, INK, 4)
+        # seven rising bars; the last two turn green
+        for i, h in enumerate([12, 24, 18, 34, 30, 48, 58]):
+            bx = x0 + 28 + i * 40
+            col = accent if i >= 5 else (200, 210, 220)
+            d.fill_rect(bx, base - h, bx + 26, base, col)
+        # rising line with arrowhead, riding just above the bar tops
+        pts = [(x0 + 41, base - 16), (x0 + 81, base - 28),
+               (x0 + 121, base - 22), (x0 + 161, base - 38),
+               (x0 + 201, base - 34), (x0 + 241, base - 52),
+               (x0 + 281, base - 62)]
+        d.polyline(pts, accent, 6)
+        d.polygon([(x0 + 281, base - 62), (x0 + 264, base - 49),
+                   (x0 + 260, base - 65)], accent)
+        # ANT oval, top-left, clear of the rising line
+        d.ellipse_outline(x0 + 70, y0 + 26, 38, 11, accent, 3)
+        draw_text(d, x0 + 70, y0 + 24, "ANT", 2, accent, anchor="mm")
+    elif kind == "tower":
+        # side buildings for depth
+        d.fill_rect(x0 + 18, base - 46, x0 + 62, base, (90, 100, 115))
+        d.fill_rect(x1 - 62, base - 58, x1 - 18, base, (90, 100, 115))
+        for wy in range(base - 42, base - 8, 12):
+            d.fill_rect(x0 + 26, wy, x0 + 36, wy + 6, (150, 180, 210))
+            d.fill_rect(x0 + 44, wy, x0 + 54, wy + 6, (150, 180, 210))
+            d.fill_rect(x1 - 54, wy, x1 - 44, wy + 6, (150, 180, 210))
+            d.fill_rect(x1 - 36, wy, x1 - 26, wy + 6, (150, 180, 210))
+        # main tower
+        d.fill_rect(cx - 32, y0 + 10, cx + 32, base, INK)
+        for wy in range(y0 + 18, base - 8, 12):
+            d.fill_rect(cx - 24, wy, cx - 8, wy + 6, (150, 180, 210))
+            d.fill_rect(cx + 8, wy, cx + 24, wy + 6, (150, 180, 210))
+        # damaged band, struck by the missile streak
+        d.fill_rect(cx - 32, y0 + 46, cx + 32, y0 + 60, accent)
+        d.line(x0 + 10, y0 + 6, cx - 14, y0 + 53, accent, 5)
+        d.polygon([(cx - 14, y0 + 53), (cx - 36, y0 + 55),
+                   (cx - 30, y0 + 38)], accent)
+        # ground
+        d.fill_rect(x0 + 10, base, x1 - 10, base + 4, (200, 210, 220))
+
+
 def draw_icon2(d, kind, box, accent):
     """More flat icons, in the same 100x100 style as draw_icon."""
     x0, y0, x1, y1 = box
@@ -723,7 +791,7 @@ def build_image():
 
     # ---- masthead (y 0-86) ----
     draw_text(d, 32, 8, "THE WORLD IN ONE DAY", 2, INK)
-    draw_text(d, W // 2, 46, "FRIDAY 20 NOVEMBER 2026", 7, INK,
+    draw_text(d, W // 2, 45, "FRIDAY 20 NOVEMBER 2026", 6, INK,
               anchor="mm")
     draw_text(d, W // 2, 79,
               "30 STORIES - EVERY CONTINENT - ALL FROM THIS ONE DAY",
@@ -760,7 +828,7 @@ def build_image():
         # illustration panel on top
         d.fill_rect(x0 + 4, 172, x0 + 314, 260, (238, 242, 245))
         d.fill_rect(x0 + 4, 172, x0 + 314, 176, accent)
-        draw_icon(d, icon, (x0 + 115, 172, x0 + 203, 260), accent)
+        draw_lead(d, icon, (x0 + 4, 172, x0 + 314, 260), accent)
         # kicker, headline, body
         draw_text(d, x0 + 4, 266, kicker, 2, accent)
         head_lines = wrap(headline, 3, 310)
@@ -820,11 +888,11 @@ def build_image():
         pts = [project(lon, lat) for lon, lat in poly]
         d.polygon(pts, (198, 198, 192))
         d.polyline(pts + [pts[0]], INK, 2)
-    # numbered pins
+    # numbered pins (radius 6: the Europe cluster, 7/13/4, now clears)
     for num, lon, lat, accent in PINS:
         px, py = project(lon, lat)
-        d.disc(px, py, 7, accent)
-        d.ellipse_outline(px, py, 7, 7, INK, 1)
+        d.disc(px, py, 6, accent)
+        d.ellipse_outline(px, py, 6, 6, INK, 1)
         draw_text(d, px, py, str(num), 1, WHITE, anchor="mm")
     # index, two columns of 9; the number in the region colour
     for i, (num, line, accent) in enumerate(INDEX):
