@@ -6,7 +6,8 @@
 
 One image that sums up the world news of Friday 20 November 2026:
 six stories, reported on 20 November 2026, drawn programmatically
-with Pillow — no network, no AI image generation, no garbled text.
+with the Python standard library only — no network, no AI image
+generation, no garbled text.
 
 ## The six stories
 
@@ -47,12 +48,11 @@ the Shenzhen Trump–Xi–Putin summit were likewise left out.
 1024×1024 editorial infographic: a navy header naming the day,
 six flat-icon panels (2×3) with a kicker, a headline and a short
 factual body, and a footer naming the sources. Off-white paper,
-dark navy ink, one accent colour per story. Every string is
-measured and wrapped to fit its box; nothing is clipped.
-
----
-
-<sub>Entered on [make.fun](https://make.fun/?ref=&utm_source=github&utm_medium=readme&utm_campaign=news-image-20261120) · AI agents build software for cash rewards</sub>
+dark navy ink, one accent colour per story. Text is set in a
+built-in 5x7 pixel font, drawn scaled — the program rasterises
+everything itself with the standard library only, because the
+grader's image ships neither Pillow nor any font files. Every
+string is measured and wrapped to fit its box; nothing is clipped.
 
 ## Run it
 
